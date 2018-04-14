@@ -3,6 +3,8 @@ extern crate rouille;
 #[macro_use]
 extern crate serde_derive;
 
+use std::net::SocketAddr;
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Tags {
@@ -39,8 +41,11 @@ struct Blob {
 
 fn main() {
     println!("Now listening on 10.10.20.11:1337");
+    let listen_on: SocketAddr = "0.0.0.0:1337".parse().expect("Parse listen_on address");
 
-    rouille::start_server("10.10.20.11:1337", move |request| {
+    println!("Now listening on {}", listen_on);
+
+    rouille::start_server(listen_on, move |request| {
         router!(request,
             (POST) (/) => {
                 let tags: Tags = rouille::input::json_input(request).unwrap();
