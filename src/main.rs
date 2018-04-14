@@ -3,6 +3,10 @@ extern crate rouille;
 #[macro_use]
 extern crate serde_derive;
 
+#[macro_use]
+extern crate log;
+extern crate env_logger;
+
 use std::net::SocketAddr;
 
 #[derive(Debug, Deserialize)]
@@ -40,7 +44,7 @@ struct Blob {
 }
 
 fn main() {
-    println!("Now listening on 10.10.20.11:1337");
+    env_logger::init();
     let listen_on: SocketAddr = "0.0.0.0:1337".parse().expect("Parse listen_on address");
 
     println!("Now listening on {}", listen_on);
@@ -53,7 +57,10 @@ fn main() {
 
                 rouille::Response::text("lol")
             },
-            _ => rouille::Response::empty_404()
+            _ => {
+                debug!("Invalid request: {:?}", request);
+                rouille::Response::empty_404()
+            }
         )
     });
 }
