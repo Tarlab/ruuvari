@@ -11,6 +11,7 @@ extern crate ruuvari;
 use std::io::prelude::*;
 use std::net::SocketAddr;
 
+use ruuvari::{Event, ToRuuvariEvent};
 use ruuvari::ruuvistation;
 use ruuvari::beaconscanner;
 
@@ -29,13 +30,13 @@ fn main() {
                 println!("Request body: {}", body);
 
                 // Try Ruuvi Station
-                let event: Result<ruuvistation::Tags, _> = serde_json::from_str(&body);
+                let event: Result<Vec<Event>, _> = ruuvistation::Tags::from_json(&body);
                 if let Ok(e) = event {
                     println!("Ruuvi Station: {:?}", e);
                 }
 
                 // Try Beacon Scanner
-                let event: Result<beaconscanner::Beacons, _> = serde_json::from_str(&body);
+                let event: Result<Vec<Event>, _> = beaconscanner::Beacons::from_json(&body);
                 if let Ok(e) = event {
                     println!("Beacon Scanner: {:?}", e);
                 }
