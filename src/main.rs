@@ -42,7 +42,7 @@ fn main() {
                     println!("Beacon Scanner: {:?}", e);
                 }
 
-                println!("");
+                println!();
                 rouille::Response::text("lol")
             },
             _ => {

@@ -59,7 +59,7 @@ impl ToRuuvariEvent for Tags {
             return Ok(events);
         }
 
-        return Err(event::Error::Other);
+        Err(event::Error::Other)
     }
 }
 
