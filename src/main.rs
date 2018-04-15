@@ -12,6 +12,7 @@ use std::io::prelude::*;
 
 mod ruuvistation;
 mod beaconscanner;
+mod event;
 
 use std::net::SocketAddr;
 

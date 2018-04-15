@@ -1,6 +1,8 @@
 //! Events sent by Ruuvi Station Android software
-//! 
+//!
 //! https://github.com/ruuvi/com.ruuvi.station
+
+use event::{self, Event, ToRuuvariEvent};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -25,7 +27,7 @@ pub struct Tag {
     name: Option<String>,
     pressure: f32,
     raw_data_blob: Blob,
-    rssi: i32,
+    rssi: isize,
     temperature: f32,
     update_at: String,
     voltage: f32,
@@ -34,6 +36,31 @@ pub struct Tag {
 #[derive(Debug, Deserialize)]
 pub struct Blob {
     blob: Vec<i32>,
+}
+
+impl ToRuuvariEvent for Tags {
+    fn from(&self) -> event::Result<Vec<Event>> {
+        fn to_event(tag: &Tag) -> Event {
+            Event {
+                beacon_address: tag.id.clone(),
+                air_pressure: tag.pressure.round() as usize,
+                humidity: tag.humidity.round() as usize,
+                temperature: tag.temperature.round() as isize,
+                rssi: tag.rssi,
+            }
+        }
+
+        if let Some(ref tag) = self.tag {
+            return Ok(vec![to_event(tag)]);
+        }
+
+        if let Some(ref tags) = self.tags {
+            let events = tags.iter().map(to_event).collect();
+            return Ok(events);
+        }
+
+        return Err(event::Error::Other);
+    }
 }
 
 #[cfg(test)]
