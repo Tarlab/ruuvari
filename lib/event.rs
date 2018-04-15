@@ -9,6 +9,7 @@
 //! the beacon in question.
 
 use std::result;
+use serde_json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Event {
@@ -17,7 +18,7 @@ pub struct Event {
     pub air_pressure: usize,
     /// in relative humidity
     pub humidity: usize,
-    /// in °C        
+    /// in °C
     pub temperature: isize,
     pub rssi: isize,
 }
@@ -26,6 +27,8 @@ pub struct Event {
 pub enum Error {
     /// Missing information to produce Event
     EmptyEvent,
+    /// JSON error
+    JSONError(serde_json::Error),
 }
 
 pub type Result<T> = result::Result<T, Error>;
@@ -36,6 +39,15 @@ pub type Result<T> = result::Result<T, Error>;
 /// message. This information is then dissected into one or more Events. One
 /// Event per one broadcast from one beacon.
 pub trait ToRuuvariEvent {
-    /// Convert a thing into vector of events.
-    fn from(&self) -> Result<Vec<Event>>;
+    /// Convert a JSON into vector of events.
+    fn from_json(input: &str) -> Result<Vec<Event>>;
+
+    /// Convert Self into vector of events
+    fn to_events(&self) -> Result<Vec<Event>>;
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(err: serde_json::Error) -> Self {
+        Error::JSONError(err)
+    }
 }

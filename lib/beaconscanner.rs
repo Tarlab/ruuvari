@@ -1,10 +1,10 @@
 //! Events sent by Beacon Scanner Android software
-//! 
+//!
 //! https://github.com/Bridouille/android-beacon-scanner
 
 use event::{self, Event, ToRuuvariEvent};
 
-use serde_json::Value;
+use serde_json::{self, Value};
 
 #[derive(Debug, Deserialize)]
 pub struct Beacons {
@@ -36,12 +36,17 @@ pub struct RuuviData {
     air_pressure: usize,
     /// in relative humidity
     humidity: usize,
-    /// in °C    
+    /// in °C
     temperature: isize,
 }
 
 impl ToRuuvariEvent for Beacons {
-    fn from(&self) -> event::Result<Vec<Event>> {
+    fn from_json(input: &str) -> event::Result<Vec<Event>> {
+        let value: Self = serde_json::from_str(input)?;
+        value.to_events()
+    }
+
+    fn to_events(&self) -> event::Result<Vec<Event>> {
         fn to_event(beacon: &Beacon) -> Event {
             Event {
                 beacon_address: beacon.beacon_address.clone(),
@@ -66,7 +71,7 @@ impl ToRuuvariEvent for Beacons {
 mod tests {
     use super::*;
     use serde_json;
-    
+
     #[test]
     fn test_json() {
         let raw = r##"{"beacons":[{"beaconAddress":"D7:58:D2:87:08:F8","beaconType":"ruuvitag","distance":2.5337382706296463,"eddystoneUrlData":{"url":"https://ruu.vi/#BCwVAMCUr"},"hashcode":1141403717,"isBlocked":false,"lastMinuteSeen":25396428,"lastSeen":1523785721504,"manufacturer":65194,"rssi":-60,"ruuviData":{"airPressure":993,"humidity":22,"temperature":21},"txPower":-48}],"reader":"Scanner 1"}"##;

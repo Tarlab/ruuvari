@@ -2,6 +2,8 @@
 //!
 //! https://github.com/ruuvi/com.ruuvi.station
 
+use serde_json;
+
 use event::{self, Event, ToRuuvariEvent};
 
 #[derive(Debug, Deserialize)]
@@ -22,7 +24,7 @@ pub struct Tag {
     accel_z: f32,
     default_background: u32,
     favorite: bool,
-    /// in relative humidity    
+    /// in relative humidity
     humidity: f32,
     id: String,
     name: Option<String>,
@@ -42,7 +44,12 @@ pub struct Blob {
 }
 
 impl ToRuuvariEvent for Tags {
-    fn from(&self) -> event::Result<Vec<Event>> {
+    fn from_json(input: &str) -> event::Result<Vec<Event>> {
+        let value: Self = serde_json::from_str(input)?;
+        value.to_events()
+    }
+
+    fn to_events(&self) -> event::Result<Vec<Event>> {
         fn to_event(tag: &Tag) -> Event {
             Event {
                 beacon_address: tag.id.clone(),
@@ -58,8 +65,7 @@ impl ToRuuvariEvent for Tags {
         }
 
         if let Some(ref tags) = self.tags {
-            let events = tags.iter().map(to_event).collect();
-            return Ok(events);
+            return Ok(tags.iter().map(to_event).collect());
         }
 
         Err(event::Error::EmptyEvent)
