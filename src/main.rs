@@ -1,20 +1,18 @@
 #[macro_use]
 extern crate rouille;
-#[macro_use]
-extern crate serde_derive;
 extern crate serde_json;
 
 #[macro_use]
 extern crate log;
 extern crate env_logger;
 
+extern crate ruuvari;
+
 use std::io::prelude::*;
-
-mod ruuvistation;
-mod beaconscanner;
-mod event;
-
 use std::net::SocketAddr;
+
+use ruuvari::ruuvistation;
+use ruuvari::beaconscanner;
 
 fn main() {
     env_logger::init();
