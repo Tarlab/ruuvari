@@ -2,6 +2,8 @@
 //! 
 //! https://github.com/Bridouille/android-beacon-scanner
 
+use event::{self, Event, ToRuuvariEvent};
+
 use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
@@ -30,9 +32,25 @@ pub struct Beacon {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RuuviData {
-    air_pressure: isize,
-    humidity: isize,
+    air_pressure: usize,
+    humidity: usize,
     temperature: isize,
+}
+
+impl ToRuuvariEvent for Beacons {
+    fn from(&self) -> event::Result<Vec<Event>> {
+        fn to_event(beacon: &Beacon) -> Event {
+            Event {
+                beacon_address: beacon.beacon_address.clone(),
+                air_pressure: beacon.ruuvi_data.air_pressure,
+                humidity: beacon.ruuvi_data.humidity,
+                temperature: beacon.ruuvi_data.temperature,
+                rssi: beacon.rssi,
+            }
+        };
+
+        Ok(self.beacons.iter().map(to_event).collect())
+    }
 }
 
 #[cfg(test)]
