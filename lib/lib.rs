@@ -2,6 +2,8 @@
 extern crate serde_derive;
 extern crate serde_json;
 
+extern crate chrono;
+
 /// A common event for everything
 pub mod event;
 pub use event::{Event, ToRuuvariEvent};

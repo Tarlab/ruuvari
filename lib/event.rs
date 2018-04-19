@@ -9,26 +9,34 @@
 //! the beacon in question.
 
 use std::result;
+
+use chrono::{self, DateTime, Utc};
 use serde_json;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Event {
     pub beacon_address: String,
     /// in hPA
-    pub air_pressure: usize,
+    pub air_pressure: f32,
     /// in relative humidity
-    pub humidity: usize,
+    pub humidity: f32,
     /// in °C
-    pub temperature: isize,
+    pub temperature: f32,
     pub rssi: isize,
+    /// Time of event in UTC
+    pub timestamp: DateTime<Utc>,
 }
 
 #[derive(Debug)]
 pub enum Error {
     /// Missing information to produce Event
     EmptyEvent,
+    /// Parser error
+    ParseError,
     /// JSON error
     JSONError(serde_json::Error),
+    /// Error from Chrono
+    ChronoError(chrono::ParseError),
 }
 
 pub type Result<T> = result::Result<T, Error>;
@@ -49,5 +57,11 @@ pub trait ToRuuvariEvent {
 impl From<serde_json::Error> for Error {
     fn from(err: serde_json::Error) -> Self {
         Error::JSONError(err)
+    }
+}
+
+impl From<chrono::ParseError> for Error {
+    fn from(err: chrono::ParseError) -> Self {
+        Error::ChronoError(err)
     }
 }
