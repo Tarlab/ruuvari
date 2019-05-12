@@ -1,54 +1,53 @@
 #[macro_use]
 extern crate rouille;
+extern crate serde_json;
+
 #[macro_use]
-extern crate serde_derive;
+extern crate log;
+extern crate env_logger;
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Tags {
-    device_id: String,
-    event_id: String,
-    tag: Option<Tag>,
-    tags: Option<Vec<Tag>>,
-    time: String,
-}
+extern crate ruuvari;
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Tag {
-    accel_x: f32,
-    accel_y: f32,
-    accel_z: f32,
-    default_background: u32,
-    favorite: bool,
-    humidity: f32,
-    id: String,
-    name: Option<String>,
-    pressure: f32,
-    raw_data_blob: Blob,
-    rssi: i32,
-    temperature: f32,
-    update_at: String,
-    voltage: f32,
-}
+use std::io::prelude::*;
+use std::net::SocketAddr;
 
-#[derive(Debug, Deserialize)]
-struct Blob {
-    blob: Vec<i32>,
-}
+use ruuvari::{Event, ToRuuvariEvent};
+use ruuvari::ruuvistation;
+use ruuvari::beaconscanner;
 
 fn main() {
-    println!("Now listening on 10.10.20.11:1337");
+    env_logger::init();
+    let listen_on: SocketAddr = "0.0.0.0:1337".parse().expect("Parse listen_on address");
 
-    rouille::start_server("10.10.20.11:1337", move |request| {
+    println!("Now listening on {}", listen_on);
+
+    rouille::start_server(listen_on, move |request| {
         router!(request,
             (POST) (/) => {
-                let tags: Tags = rouille::input::json_input(request).unwrap();
-                println!("{:?}", tags);
+                let mut data = request.data().unwrap();
+                let mut body = String::new();
+                data.read_to_string(&mut body).unwrap();
+                println!("Request body: {}", body);
 
+                // Try Ruuvi Station
+                let event: Result<Vec<Event>, _> = ruuvistation::Tags::from_json(&body);
+                if let Ok(e) = event {
+                    println!("Ruuvi Station: {:?}", e);
+                }
+
+                // Try Beacon Scanner
+                let event: Result<Vec<Event>, _> = beaconscanner::Beacons::from_json(&body);
+                if let Ok(e) = event {
+                    println!("Beacon Scanner: {:?}", e);
+                }
+
+                println!();
                 rouille::Response::text("lol")
             },
-            _ => rouille::Response::empty_404()
+            _ => {
+                debug!("Invalid request: {:?}", request);
+                rouille::Response::empty_404()
+            }
         )
     });
 }
